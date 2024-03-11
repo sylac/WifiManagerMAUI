@@ -4,9 +4,6 @@ using Android.Net.Wifi;
 using Android.OS;
 using Android.Runtime;
 using Plugin.MauiWifiManager.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using static Android.Provider.Settings;
 using Context = Android.Content.Context;
 
@@ -16,7 +13,7 @@ namespace Plugin.MauiWifiManager
     /// Interface for WiFiNetworkService
     /// </summary>
     /// 
-    public class WifiNetworkService : IWifiNetworkService
+    public partial class WifiNetworkService : IWifiNetworkService
     {
         private static NetworkData? _networkData;
         private static Context _context;
@@ -25,15 +22,9 @@ namespace Plugin.MauiWifiManager
         private static bool _requested;
         private static NetworkRequest? _request;
         private static WifiManager? _wifiManager;
-        public WifiNetworkService() 
+        public WifiNetworkService()
         {
-            
-        }
-
-        public static void Init(Context context)
-        {
-            CheckInit(context);
-            _context = context;
+            _context = Android.App.Application.Context;
             _networkData = new NetworkData();
             _wifiManager = (WifiManager)(_context.GetSystemService(Context.WifiService));
             _request = new NetworkRequest.Builder().AddTransportType(transportType: TransportType.Wifi).Build();
@@ -48,8 +39,8 @@ namespace Plugin.MauiWifiManager
 
                 }
             };
-
         }
+
         /// <summary>
         /// Connect Wi-Fi
         /// </summary>
@@ -57,7 +48,7 @@ namespace Plugin.MauiWifiManager
         {
             _wifiManager = (WifiManager)(_context.GetSystemService(Context.WifiService));
             if (Build.VERSION.SdkInt <= BuildVersionCodes.P)
-            {               
+            {
                 if (!_wifiManager.IsWifiEnabled)
                 {
                     _wifiManager.SetWifiEnabled(true);
@@ -96,12 +87,11 @@ namespace Plugin.MauiWifiManager
         /// </summary>
         public void DisconnectWifi(string? ssid)
         {
-            CheckInit(_context);
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
             {
                 Intent panelIntent = new Intent(Panel.ActionWifi);
                 _context.StartActivity(panelIntent);
-            }               
+            }
             else
             {
                 _wifiManager = (WifiManager)(_context.GetSystemService(Context.WifiService));
@@ -114,7 +104,7 @@ namespace Plugin.MauiWifiManager
         /// Get Wi-Fi Network Info
         /// </summary>
         public async Task<NetworkData> GetNetworkInfo()
-        {           
+        {
             int apiLevel = (int)Build.VERSION.SdkInt;
             if (apiLevel < 31)
             {
@@ -155,7 +145,6 @@ namespace Plugin.MauiWifiManager
         /// </summary>
         public Task<bool> OpenWifiSetting()
         {
-            CheckInit(_context);
             var taskCompletionSource = new TaskCompletionSource<bool>();
             Intent panelIntent;
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
@@ -175,12 +164,6 @@ namespace Plugin.MauiWifiManager
 
         }
 
-        public static void CheckInit(Context context)
-        {
-            if (context == null)
-                throw new ArgumentNullException(nameof(_context), "Please call WifiNetworkService.Init(this) inside the MainActivity's OnCreate function.");
-        }
-
         private async Task AddWifi(string ssid, string psk)
         {
             await Task.Run(async () =>
@@ -189,9 +172,9 @@ namespace Plugin.MauiWifiManager
                         {
                            new WifiNetworkSuggestion.Builder()
                             .SetSsid(ssid)
-                            .SetWpa2Passphrase(psk)                          
+                            .SetWpa2Passphrase(psk)
                             .SetIsAppInteractionRequired(true)
-                            .SetIsUserInteractionRequired(true)                                                
+                            .SetIsUserInteractionRequired(true)
                             .SetIsEnhancedOpen(false)
                             .SetIsHiddenSsid(false)
                             .Build()
@@ -205,12 +188,12 @@ namespace Plugin.MauiWifiManager
                 _context.StartActivity(intent);
 
             });
-         }      
+        }
 
-        public void RequestNetwork(string ssid, string password) 
+        public void RequestNetwork(string ssid, string password)
         {
             _wifiManager = (WifiManager)(_context.GetSystemService(Context.WifiService));
-            if (!_wifiManager.IsWifiEnabled) 
+            if (!_wifiManager.IsWifiEnabled)
             {
                 Console.WriteLine("Wi-Fi is turned off");
             }
@@ -258,18 +241,18 @@ namespace Plugin.MauiWifiManager
         public async Task<List<NetworkData>> ScanWifiNetworks()
         {
             _wifiManager = (WifiManager)(_context.GetSystemService(Context.WifiService));
-            List<NetworkData> wifiNetworks = new List<NetworkData>();   
+            List<NetworkData> wifiNetworks = new List<NetworkData>();
             if (_wifiManager.IsWifiEnabled)
             {
                 _wifiManager?.StartScan();
                 var scanResults = _wifiManager?.ScanResults;
                 foreach (var result in scanResults)
                 {
-                    wifiNetworks.Add(new NetworkData() 
-                    { 
+                    wifiNetworks.Add(new NetworkData()
+                    {
                         Bssid = result.Bssid,
                         Ssid = result.Ssid,
-                        NativeObject = result 
+                        NativeObject = result
                     });
                 }
             }
@@ -317,7 +300,7 @@ namespace Plugin.MauiWifiManager
                         _networkData.IpAddress = wifiInfo.IpAddress;
                         _networkData.NativeObject = wifiInfo;
                         _networkData.SignalStrength = wifiInfo.Rssi;
-                    }                                 
+                    }
                 }
             }
         }
@@ -338,10 +321,10 @@ namespace Plugin.MauiWifiManager
         }
 
         private class WifiScanReceiver : BroadcastReceiver
-        {            
+        {
             public List<ScanResult> ScanResults { get; private set; }
             public WifiScanReceiver(WifiNetworkService wifiScanner)
-            {                                         
+            {
                 ScanResults = new List<ScanResult>();
             }
             public override void OnReceive(Context context, Intent intent)

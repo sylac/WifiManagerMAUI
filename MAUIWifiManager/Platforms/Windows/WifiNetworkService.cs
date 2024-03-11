@@ -1,21 +1,16 @@
 ﻿using Plugin.MauiWifiManager.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using Windows.Devices.WiFi;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
 using Windows.Security.Credentials;
-using Windows.System;
 
 namespace Plugin.MauiWifiManager
 {
     /// <summary>
     /// Interface for Wi-FiNetworkService
     /// </summary>
-    public class WifiNetworkService : IWifiNetworkService
+    public partial class WifiNetworkService : IWifiNetworkService
     {
         public WifiNetworkService()
         {
@@ -58,7 +53,7 @@ namespace Plugin.MauiWifiManager
                             var status = await adapter.ConnectAsync(wiFiAvailableNetwork, WiFiReconnectionKind.Automatic, credential);
                             if (status.ConnectionStatus == WiFiConnectionStatus.Success)
                             {
-                                ConnectionProfile InternetConnectionProfile = NetworkInformation.GetInternetConnectionProfile();
+                                Windows.Networking.Connectivity.ConnectionProfile InternetConnectionProfile = NetworkInformation.GetInternetConnectionProfile();
                                 var hostname = NetworkInformation.GetHostNames().FirstOrDefault(hn => hn.IPInformation?.NetworkAdapter != null && hn.IPInformation.NetworkAdapter.NetworkAdapterId == InternetConnectionProfile?.NetworkAdapter.NetworkAdapterId);
                                 networkData.Ssid = hostname.ToString();
                                 Console.WriteLine("OK");
@@ -98,7 +93,7 @@ namespace Plugin.MauiWifiManager
         public Task<NetworkData> GetNetworkInfo()
         {
             NetworkData data = new NetworkData();
-            ConnectionProfile profile = NetworkInformation.GetInternetConnectionProfile();
+            Windows.Networking.Connectivity.ConnectionProfile profile = NetworkInformation.GetInternetConnectionProfile();
             data.StausId = (int)profile.GetNetworkConnectivityLevel();
             if (profile.IsWlanConnectionProfile)
             {
@@ -110,7 +105,7 @@ namespace Plugin.MauiWifiManager
             data.IpAddress = BitConverter.ToInt32(ipAddress.GetAddressBytes(), 0);
             data.Bssid = profile.NetworkAdapter.NetworkAdapterId;
             data.NativeObject = profile;
-            data.SignalStrength = profile.GetSignalBars();           
+            data.SignalStrength = profile.GetSignalBars();
             return Task.FromResult(data);
         }
 
@@ -119,7 +114,7 @@ namespace Plugin.MauiWifiManager
         /// </summary>
         public async Task<bool> OpenWifiSetting()
         {
-            return await Launcher.LaunchUriAsync(new Uri("ms-settings:network-wifi"));
+            return await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings:network-wifi"));
         }
 
         /// <summary>

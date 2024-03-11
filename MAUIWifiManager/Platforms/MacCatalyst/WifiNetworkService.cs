@@ -3,11 +3,7 @@ using CoreLocation;
 using Foundation;
 using NetworkExtension;
 using Plugin.MauiWifiManager.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using SystemConfiguration;
 using UIKit;
 
@@ -16,7 +12,7 @@ namespace Plugin.MauiWifiManager
     /// <summary>
     /// Interface for WiFiNetworkService
     /// </summary>
-    public class WifiNetworkService : IWifiNetworkService
+    public partial class WifiNetworkService : IWifiNetworkService
     {
         public NEHotspotHelper hotspotHelper;
         public WifiNetworkService()
